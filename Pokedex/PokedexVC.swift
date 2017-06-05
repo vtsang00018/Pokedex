@@ -10,18 +10,27 @@ import UIKit
 import AVFoundation
 
 class PokedexVC: UIViewController, UICollectionViewDelegate,
-                        UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
+                        UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UISearchBarDelegate{
 
     @IBOutlet weak var myCollectionView: UICollectionView!
 
+    @IBOutlet weak var searchBar: UISearchBar!
+    
     var pokemons: [Pokemon]!
+    var filteredPokemons: [Pokemon]!
+    
+    var isSearchMode = false
+    
     var musicPlayer: AVAudioPlayer!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         myCollectionView.delegate = self
         myCollectionView.dataSource = self
-        // Do any additional setup after loading the view, typically from a nib.)
+       
+        searchBar.delegate = self
+        searchBar.returnKeyType = UIReturnKeyType.done
+        
         pokemons = readPokeCSV(csvName: "pokemon", csvType: "csv")
         initMusic()
     }
@@ -43,6 +52,11 @@ class PokedexVC: UIViewController, UICollectionViewDelegate,
     
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        
+        if isSearchMode{
+            return filteredPokemons.count
+        }
+        
         return pokemons.count
     }
     
@@ -50,7 +64,14 @@ class PokedexVC: UIViewController, UICollectionViewDelegate,
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PokeCell", for: indexPath) as? PokeCell{
             
-            let pokemon = Pokemon(name: pokemons[indexPath.row].name, pokemonID: pokemons[indexPath.row].pokemonID)
+            let pokemon: Pokemon!
+            
+            if isSearchMode{
+                pokemon = Pokemon(name: filteredPokemons[indexPath.row].name, pokemonID: filteredPokemons[indexPath.row].pokemonID)
+            } else {
+            
+                pokemon = Pokemon(name: pokemons[indexPath.row].name, pokemonID: pokemons[indexPath.row].pokemonID)
+            }
             cell.configureCell(pokemon)
             return cell
         }
@@ -74,8 +95,29 @@ class PokedexVC: UIViewController, UICollectionViewDelegate,
             musicPlayer.play()
             sender.alpha = 1.0
         }
-    
     }
     
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        view.endEditing(true)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        if searchBar.text == nil || searchBar.text == ""{
+            isSearchMode = false
+            myCollectionView.reloadData()
+            view.endEditing(true)
+            
+        } else {
+            isSearchMode = true
+            let lower = searchBar.text!.lowercased()
+        
+            filteredPokemons = pokemons.filter({
+                $0.name.range(of: lower) != nil
+            })
+            
+            myCollectionView.reloadData()
+        }
+    }
 }
 
