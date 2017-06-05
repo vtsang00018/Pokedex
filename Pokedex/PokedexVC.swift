@@ -7,31 +7,51 @@
 //
 
 import UIKit
-
+import AVFoundation
 
 class PokedexVC: UIViewController, UICollectionViewDelegate,
                         UICollectionViewDataSource, UICollectionViewDelegateFlowLayout{
 
     @IBOutlet weak var myCollectionView: UICollectionView!
+
+    var pokemons: [Pokemon]!
+    var musicPlayer: AVAudioPlayer!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         myCollectionView.delegate = self
         myCollectionView.dataSource = self
-        
         // Do any additional setup after loading the view, typically from a nib.)
+        pokemons = readPokeCSV(csvName: "pokemon", csvType: "csv")
+        initMusic()
     }
 
+    func initMusic(){
+        let path = Bundle.main.path(forResource: "music", ofType: "mp3")!
+        
+        do {
+            musicPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
+            
+            musicPlayer.prepareToPlay()
+            musicPlayer.numberOfLoops = -1
+            musicPlayer.play()
+            
+        } catch let err as NSError{
+            print(err.debugDescription)
+        }
+    }
+    
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 30
+        return pokemons.count
     }
     
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PokeCell", for: indexPath) as? PokeCell{
             
-            var pokemon = Pokemon(name: "Pokemon", pokemonID: indexPath.row+1)
-            cell.configureCell(pokemon: pokemon)
+            let pokemon = Pokemon(name: pokemons[indexPath.row].name, pokemonID: pokemons[indexPath.row].pokemonID)
+            cell.configureCell(pokemon)
             return cell
         }
         
@@ -46,6 +66,16 @@ class PokedexVC: UIViewController, UICollectionViewDelegate,
         
     }
     
+    @IBAction func musicBtnPressed(_ sender: UIButton) {
+        if musicPlayer.isPlaying{
+            musicPlayer.pause()
+            sender.alpha = 0.4
+        } else {
+            musicPlayer.play()
+            sender.alpha = 1.0
+        }
+    
+    }
     
 }
 
