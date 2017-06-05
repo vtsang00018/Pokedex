@@ -22,7 +22,7 @@ class Pokemon{
     }
     
     init(name: String, pokemonID: Int) {
-        self._name = name
+        self._name = name.capitalized
         self._pokemonID = pokemonID
     }
 }
